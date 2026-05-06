@@ -1,0 +1,80 @@
+
+`timescale 1ns / 1ps
+
+module smart_traffic(
+    input clk,
+    input reset,
+    output reg [1:0] roadA,
+    output reg [1:0] roadB
+);
+
+    reg [1:0] state, next_state;
+    reg [25:0] count;
+
+    // -------- TIMER --------
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            count <= 0;
+        else if (count == 10)   // small value for simulation
+            count <= 0;
+        else
+            count <= count + 1;
+    end
+
+    // -------- STATE REGISTER --------
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            state <= 2'b00;
+        else if (count == 10)   // change only after delay
+            state <= next_state;
+    end
+
+    // -------- NEXT STATE LOGIC --------
+    always @(*) begin
+        case(state)
+
+            2'b00: next_state = 2'b01; // A Green → A Yellow
+            2'b01: next_state = 2'b10; // A Yellow → B Green
+            2'b10: next_state = 2'b11; // B Green → B Yellow
+            2'b11: next_state = 2'b00; // B Yellow → A Green
+
+            default: next_state = 2'b00;
+
+        endcase
+    end
+
+    // -------- OUTPUT LOGIC --------
+    always @(*) begin
+        case(state)
+
+            2'b00: begin
+                roadA = 2'b10; // GREEN
+                roadB = 2'b00; // RED
+            end
+
+            2'b01: begin
+                roadA = 2'b01; // YELLOW
+                roadB = 2'b00;
+            end
+
+            2'b10: begin
+                roadA = 2'b00;
+                roadB = 2'b10; // GREEN
+            end
+
+            2'b11: begin
+                roadA = 2'b00;
+                roadB = 2'b01; // YELLOW
+            end
+
+            default: begin
+                roadA = 2'b00;
+                roadB = 2'b00;
+            end
+
+        endcase
+    end
+
+endmodule
+
+
